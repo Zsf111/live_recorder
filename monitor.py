@@ -1,10 +1,10 @@
-# import os
 import subprocess
 import time
+from datetime import datetime
 
 import psycopg2
 
-# Memory guard dictionary: keeps track of running recording processes to avoid re-launching the same room_id
+# {room_id: {"process": Popen, "log_id": int}}
 recording_processes = {}
 last_report_time = time.time()
 
@@ -51,6 +51,54 @@ def update_streamer_status(room_id, status):
         print(f"[DB Sync] Successfully updated streamer ({room_id}) status to: {status}")
     except Exception as e:
         print(f"[DB Sync Failed]: {e}")
+
+
+def insert_record_log(room_id, start_time, file_path):
+    try:
+        connection = psycopg2.connect(
+            host="localhost",
+            port="5432",
+            database="live_recorder",
+            user="postgres",
+            password="zsf3010ghdej",
+        )
+        cursor = connection.cursor()
+        cursor.execute(
+            "INSERT INTO t_record_log (room_id, start_time, file_path, status) VALUES (%s, %s, %s, 'RECORDING') RETURNING id",
+            (room_id, start_time, file_path),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise Exception("INSERT returned no id, check if the table exists")
+        log_id = row[0]
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return log_id
+    except Exception as e:
+        print(f"[DB] Failed to insert record log: {e}")
+        return None
+
+
+def update_record_log(log_id, end_time, status):
+    try:
+        connection = psycopg2.connect(
+            host="localhost",
+            port="5432",
+            database="live_recorder",
+            user="postgres",
+            password="zsf3010ghdej",
+        )
+        cursor = connection.cursor()
+        cursor.execute(
+            "UPDATE t_record_log SET end_time = %s, status = %s WHERE id = %s",
+            (end_time, status, log_id),
+        )
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print(f"[DB] Failed to update record log: {e}")
 
 
 def check_live_status(room_id, platform):
@@ -126,16 +174,16 @@ def start_recording(room_id, name, platform):
         return
 
     try:
-        # 挂起异步子进程，并将输出导向 DEVNULL 保持控制台干净
         process = subprocess.Popen(
             cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
 
-        # 1. 更新 Python 内存字典
-        recording_processes[room_id] = process
+        now = datetime.now()
+        log_id = insert_record_log(room_id, now, output_path)
+
+        recording_processes[room_id] = {"process": process, "log_id": log_id}
         print(f"Recording process started! Streaming to: {output_path}")
 
-        # Sync to Postgres: update status to RECORDING
         update_streamer_status(room_id, "RECORDING")
 
     except Exception as e:
@@ -147,16 +195,16 @@ def clean_finished_processes():
     Process reaper: periodically check if background recording processes have finished
     """
     finished_rooms = []
-    for room_id, process in recording_processes.items():
-        # poll() 不为 None 代表进程已经结束（主播下播或断流）
-        if process.poll() is not None:
+    for room_id, info in recording_processes.items():
+        if info["process"].poll() is not None:
             finished_rooms.append(room_id)
             print(f"Detected streamer ({room_id}) recording process has exited.")
 
     for room_id in finished_rooms:
-        # 1. 从 Python 内存字典中踢出
+        info = recording_processes[room_id]
+        now = datetime.now()
+        update_record_log(info["log_id"], now, "SUCCESS")
         del recording_processes[room_id]
-        # Sync to Postgres: update status back to OFFLINE
         update_streamer_status(room_id, "OFFLINE")
 
 
@@ -213,8 +261,10 @@ def start_monitoring_loop():
 
         except KeyboardInterrupt:
             print("\nShutdown signal received! Safely terminating all background download streams...")
-            for room_id, process in recording_processes.items():
-                process.terminate()
+            now = datetime.now()
+            for room_id, info in recording_processes.items():
+                info["process"].terminate()
+                update_record_log(info["log_id"], now, "INTERRUPTED")
                 update_streamer_status(room_id, "OFFLINE")
             print("All pipelines safely closed. Sentinel signing off!")
             break
