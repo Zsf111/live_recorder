@@ -47,5 +47,5 @@ trap cleanup SIGTERM SIGINT
 
 # Run monitor in background and wait (keep shell as PID 1 for signal handling)
 echo "[app] Starting live monitor..."
-python3 /app/monitor.py &
+python3 -u /app/monitor.py &
 wait $!
