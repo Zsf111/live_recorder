@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+.venv/
+
+# Database data (mounted from Docker)
+postgres_data/
+
+# Downloaded recordings
+downloads/
+
+# macOS
+.DS_Store
