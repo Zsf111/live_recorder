@@ -18,7 +18,7 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     -r requirements.txt
 
 COPY add_streamer.py init_db.py monitor.py startup.sh ./
-RUN chmod +x startup.sh && mkdir -p downloads /app/postgres_data
+RUN chmod +x startup.sh && mkdir -p downloads && chown -R postgres:postgres /app
 
 ENV DB_HOST=localhost \
     DB_PORT=5432 \
@@ -29,4 +29,5 @@ ENV DB_HOST=localhost \
 VOLUME /var/lib/postgresql/data
 VOLUME /app/downloads
 
+USER postgres
 CMD ["/app/startup.sh"]
