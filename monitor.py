@@ -1,22 +1,31 @@
+import os
 import subprocess
 import time
 from datetime import datetime
+from typing import Any
 
 import psycopg2
+
+DOWNLOAD_DIR = os.environ.get("DOWNLOAD_DIR", "downloads")
+PROXY = os.environ.get("HTTP_PROXY", "")
 
 # {room_id: {"process": Popen, "log_id": int}}
 recording_processes = {}
 last_report_time = time.time()
 
 
-def get_monitored_streamers():
-    connection = psycopg2.connect(
-        host="localhost",
-        port="5432",
-        database="live_recorder",
-        user="postgres",
-        password="zsf3010ghdej",
+def _connect():
+    return psycopg2.connect(
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=os.environ.get("DB_PORT", "5432"),
+        database=os.environ.get("DB_NAME", "live_recorder"),
+        user=os.environ.get("DB_USER", "postgres"),
+        password=os.environ["DB_PASSWORD"],
     )
+
+
+def get_monitored_streamers() -> list[tuple[Any, ...]]:
+    connection = _connect()
     cursor = connection.cursor()
     cursor.execute(
         "SELECT room_id, streamer_name, platform FROM t_streamer_config WHERE is_monitored = TRUE"
@@ -27,18 +36,12 @@ def get_monitored_streamers():
     return streamers
 
 
-def update_streamer_status(room_id, status):
+def update_streamer_status(room_id: str, status: str) -> None:
     """
     Status sync: persist the recording status to the Postgres database
     """
     try:
-        connection = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="live_recorder",
-            user="postgres",
-            password="zsf3010ghdej",
-        )
+        connection = _connect()
         cursor = connection.cursor()
         # 更新我们在 Docker 里刚刚 ALTER 拓宽的 current_status 字段
         cursor.execute(
@@ -53,15 +56,9 @@ def update_streamer_status(room_id, status):
         print(f"[DB Sync Failed]: {e}")
 
 
-def insert_record_log(room_id, start_time, file_path):
+def insert_record_log(room_id: str, start_time: datetime, file_path: str) -> int | None:
     try:
-        connection = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="live_recorder",
-            user="postgres",
-            password="zsf3010ghdej",
-        )
+        connection = _connect()
         cursor = connection.cursor()
         cursor.execute(
             "INSERT INTO t_record_log (room_id, start_time, file_path, status) VALUES (%s, %s, %s, 'RECORDING') RETURNING id",
@@ -80,15 +77,9 @@ def insert_record_log(room_id, start_time, file_path):
         return None
 
 
-def update_record_log(log_id, end_time, status):
+def update_record_log(log_id: int, end_time: datetime, status: str) -> None:
     try:
-        connection = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="live_recorder",
-            user="postgres",
-            password="zsf3010ghdej",
-        )
+        connection = _connect()
         cursor = connection.cursor()
         cursor.execute(
             "UPDATE t_record_log SET end_time = %s, status = %s WHERE id = %s",
@@ -101,11 +92,7 @@ def update_record_log(log_id, end_time, status):
         print(f"[DB] Failed to update record log: {e}")
 
 
-def check_live_status(room_id, platform):
-    """
-    Live status probe: Bilibili via yt-dlp, Twitch via streamlink (proxied)
-    """
-    LOCAL_PROXY = "http://127.0.0.1:7897"
+def check_live_status(room_id: str, platform: str) -> bool:
     try:
         if platform.lower() == "bilibili":
             url = f"https://live.bilibili.com/{room_id}"
@@ -118,15 +105,12 @@ def check_live_status(room_id, platform):
             )
         elif platform.lower() == "twitch":
             url = f"https://www.twitch.tv/{room_id}"
+            cmd = ["streamlink"]
+            if PROXY:
+                cmd += ["--http-proxy", PROXY]
+            cmd += [url, "best", "--stream-url"]
             result = subprocess.run(
-                [
-                    "streamlink",
-                    "--http-proxy",
-                    LOCAL_PROXY,
-                    url,
-                    "best",
-                    "--stream-url",
-                ],
+                cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -144,13 +128,9 @@ def check_live_status(room_id, platform):
         return False
 
 
-def start_recording(room_id, name, platform):
-    """
-    Async recording engine
-    """
-    LOCAL_PROXY = "http://127.0.0.1:7897"
+def start_recording(room_id: str, name: str, platform: str) -> None:
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    output_path = f"downloads/{name}_{timestamp}.mp4"
+    output_path = os.path.join(DOWNLOAD_DIR, f"{name}_{timestamp}.mp4")
 
     print(f"Preparing to start background recording for [{name}]...")
 
@@ -161,15 +141,10 @@ def start_recording(room_id, name, platform):
 
     elif platform.lower() == "twitch":
         url = f"https://www.twitch.tv/{room_id}"
-        cmd = [
-            "streamlink",
-            "--http-proxy",
-            LOCAL_PROXY,
-            url,
-            "best",
-            "-o",
-            output_path,
-        ]
+        cmd = ["streamlink"]
+        if PROXY:
+            cmd += ["--http-proxy", PROXY]
+        cmd += [url, "best", "-o", output_path]
     else:
         return
 
@@ -190,7 +165,7 @@ def start_recording(room_id, name, platform):
         print(f"Failed to start recording subprocess: {e}")
 
 
-def clean_finished_processes():
+def clean_finished_processes() -> None:
     """
     Process reaper: periodically check if background recording processes have finished
     """
@@ -208,7 +183,7 @@ def clean_finished_processes():
         update_streamer_status(room_id, "OFFLINE")
 
 
-def report_current_status(streamers):
+def report_current_status(streamers: list[tuple[Any, ...]]) -> None:
     """
     Periodic status report every 10 minutes
     """
@@ -226,7 +201,7 @@ def report_current_status(streamers):
     print("=" * 60 + "\n")
 
 
-def start_monitoring_loop():
+def start_monitoring_loop() -> None:
     global last_report_time
     print(
         "[Minimal Log] Multi-Platform Patrol System starting (scan every 60s, report every 10min)..."

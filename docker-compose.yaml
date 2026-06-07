@@ -1,15 +1,14 @@
 services:
-  # 我们的数据库服务，命名为 live-db
-  live-db:
-    image: postgres:16
-    container_name: live_postgres_container
-    environment:
-      POSTGRES_DB: live_recorder # 自动创建的数据库名字
-      POSTGRES_USER: postgres # 数据库超级管理员用户名
-      POSTGRES_PASSWORD: zsf3010ghdej # 你的硬核密码
+  live-recorder:
+    build: .
+    container_name: live_recorder
     ports:
-      - "5432:5432" # 将容器的 5432 端口射向 Mac 的 5432 端口
+      - "${DB_EXPOSE_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: live_recorder
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      # 【Bind Mount】把数据死死存在本地项目目录下的 postgres_data 文件夹里
       - ./postgres_data:/var/lib/postgresql/data
+      - ./downloads:/app/downloads
     restart: always

@@ -1,18 +1,23 @@
+import os
+
 import psycopg2
 
 
-def init_database():
+def _connect():
+    return psycopg2.connect(
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=os.environ.get("DB_PORT", "5432"),
+        database=os.environ.get("DB_NAME", "live_recorder"),
+        user=os.environ.get("DB_USER", "postgres"),
+        password=os.environ["DB_PASSWORD"],
+    )
+
+
+def init_database() -> None:
     connection = None
     cursor = None
     try:
-        # 1. 敲响数据库的大门（配置必须和 docker-compose.yaml 里的完全对齐）
-        connection = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            database="live_recorder",
-            user="postgres",
-            password="zsf3010ghdej",  # 确保和你的密码一致
-        )
+        connection = _connect()
 
         # 2. 创建一个游标（相当于在数据库里敲命令的那个闪烁光标）
         cursor = connection.cursor()

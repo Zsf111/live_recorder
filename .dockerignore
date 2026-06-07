@@ -1,0 +1,9 @@
+.venv
+__pycache__
+*.pyc
+.git
+postgres_data
+downloads
+.env
+docker-compose.yaml
+Dockerfile
