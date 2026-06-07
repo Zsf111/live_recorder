@@ -4,7 +4,7 @@ import time
 
 import psycopg2
 
-# 🧠 内存守护字典：依然保留在内存中，用于控制主循环不要重复拉起同一个room_id
+# Memory guard dictionary: keeps track of running recording processes to avoid re-launching the same room_id
 recording_processes = {}
 last_report_time = time.time()
 
@@ -29,7 +29,7 @@ def get_monitored_streamers():
 
 def update_streamer_status(room_id, status):
     """
-    💾 状态回写官：将内存中的录制状态同步持久化到 Postgres 数据库中
+    Status sync: persist the recording status to the Postgres database
     """
     try:
         connection = psycopg2.connect(
@@ -48,14 +48,14 @@ def update_streamer_status(room_id, status):
         connection.commit()  # DML 语句必须 commit 才能真正写入磁盘
         cursor.close()
         connection.close()
-        print(f"🔄 [DB同步] 成功将主播 ({room_id}) 的数据库状态变更为: {status}")
+        print(f"[DB Sync] Successfully updated streamer ({room_id}) status to: {status}")
     except Exception as e:
-        print(f"❌ [DB同步失败]: {e}")
+        print(f"[DB Sync Failed]: {e}")
 
 
 def check_live_status(room_id, platform):
     """
-    🕵️ 哨兵嗅探逻辑：B站用 yt-dlp，Twitch 走代理用 streamlink
+    Live status probe: Bilibili via yt-dlp, Twitch via streamlink (proxied)
     """
     LOCAL_PROXY = "http://127.0.0.1:7897"
     try:
@@ -98,17 +98,17 @@ def check_live_status(room_id, platform):
 
 def start_recording(room_id, name, platform):
     """
-    🎬 异步录制引擎
+    Async recording engine
     """
     LOCAL_PROXY = "http://127.0.0.1:7897"
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     output_path = f"downloads/{name}_{timestamp}.mp4"
 
-    print(f"🛰️ 准备为 【{name}】 开启后台录制管道...")
+    print(f"Preparing to start background recording for [{name}]...")
 
     if platform.lower() == "bilibili":
         url = f"https://live.bilibili.com/{room_id}"
-        # 🌟 黄金重构：精准使用你测试成功的传统 HTTP 直播流过滤命令
+        # Use the tested traditional HTTP live stream filter command
         cmd = ["yt-dlp", "-f", "best[protocol^=http]", "-o", output_path, url]
 
     elif platform.lower() == "twitch":
@@ -133,45 +133,45 @@ def start_recording(room_id, name, platform):
 
         # 1. 更新 Python 内存字典
         recording_processes[room_id] = process
-        print(f"🔴 后台进程已拉起！文件流正实时写入: {output_path}")
+        print(f"Recording process started! Streaming to: {output_path}")
 
-        # 2. 🌟 核心修复：同步让大脑通知 Postgres 数据库，状态改为 RECORDING
+        # Sync to Postgres: update status to RECORDING
         update_streamer_status(room_id, "RECORDING")
 
     except Exception as e:
-        print(f"❌ 试图拉起录制子进程失败: {e}")
+        print(f"Failed to start recording subprocess: {e}")
 
 
 def clean_finished_processes():
     """
-    🧹 进程收尸官：定期轮询后台下载进程是否寿终正寝
+    Process reaper: periodically check if background recording processes have finished
     """
     finished_rooms = []
     for room_id, process in recording_processes.items():
         # poll() 不为 None 代表进程已经结束（主播下播或断流）
         if process.poll() is not None:
             finished_rooms.append(room_id)
-            print(f"🏁 监测到主播 ({room_id}) 的录制进程已在后台退出。")
+            print(f"Detected streamer ({room_id}) recording process has exited.")
 
     for room_id in finished_rooms:
         # 1. 从 Python 内存字典中踢出
         del recording_processes[room_id]
-        # 2. 🌟 核心修复：同步通知 Postgres 数据库，状态回滚为 OFFLINE
+        # Sync to Postgres: update status back to OFFLINE
         update_streamer_status(room_id, "OFFLINE")
 
 
 def report_current_status(streamers):
     """
-    📊 每10分钟一次的复盘大汇报
+    Periodic status report every 10 minutes
     """
-    print("\n" + "=" * 20 + " 📊 10分钟定点状态汇报 " + "=" * 20)
+    print("\n" + "=" * 20 + " 10-Minute Status Report " + "=" * 20)
     current_time_str = time.strftime("%Y-%m-%d %H:%M:%S")
     print(f"汇报时间: {current_time_str}")
     print(f"当前总录制任务数: {len(recording_processes)}")
     print("-" * 50)
 
     for room_id, name, platform in streamers:
-        status = "🔴 RECORDING" if room_id in recording_processes else "💤 OFFLINE"
+        status = "RECORDING" if room_id in recording_processes else "OFFLINE"
         print(
             f" [{platform.upper()}]  {name:<12} (房间号: {room_id:<8}) ──> 状态: {status}"
         )
@@ -181,9 +181,9 @@ def report_current_status(streamers):
 def start_monitoring_loop():
     global last_report_time
     print(
-        "🕵️‍♂️ 【极简日志版】两栖巡逻守护系统正式启航（每60秒静默扫描，每10分钟大汇报）..."
+        "[Minimal Log] Multi-Platform Patrol System starting (scan every 60s, report every 10min)..."
     )
-    print("--------- 守护中 ---------")
+    print("--------- Monitoring ---------")
 
     while True:
         try:
@@ -202,24 +202,24 @@ def start_monitoring_loop():
                 if is_live:
                     start_recording(room_id, name, platform)
 
-            # 4. 🧠 检查是否达到了 10 分钟（600秒）的汇报阈值
+            # 4. 检查是否达到了 10 分钟（600秒）的汇报阈值
             if time.time() - last_report_time >= 600:
                 report_current_status(streamers)
                 last_report_time = time.time()  # 重置汇报时间
                 print("--------- 守护中 ---------")
 
-            # 5. ⏳ 遵照嘱托：小憩 60 秒
+            # 5. 遵照嘱托：小憩 60 秒
             time.sleep(60)
 
         except KeyboardInterrupt:
-            print("\n🛑 收到下班指令！正在安全切断所有后台下载流...")
+            print("\nShutdown signal received! Safely terminating all background download streams...")
             for room_id, process in recording_processes.items():
                 process.terminate()
                 update_streamer_status(room_id, "OFFLINE")
-            print("🔒 整个管道已安全关闭，哨兵退线！")
+            print("All pipelines safely closed. Sentinel signing off!")
             break
         except Exception as e:
-            print(f"⚠️ 系统主循环发生异常: {e}")
+            print(f"Main loop exception: {e}")
             time.sleep(10)
 
 
