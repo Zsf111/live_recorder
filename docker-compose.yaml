@@ -8,6 +8,7 @@ services:
       POSTGRES_DB: live_recorder
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      DB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
       - ./downloads:/app/downloads
