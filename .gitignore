@@ -11,5 +11,8 @@ postgres_data/
 # Downloaded recordings
 downloads/
 
+# Claude
+.claude/
+
 # macOS
 .DS_Store
