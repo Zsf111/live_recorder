@@ -6,5 +6,6 @@ __pycache__
 postgres_data
 downloads
 .env
+CONTEXT.md
 docker-compose.yaml
 Dockerfile
