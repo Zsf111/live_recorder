@@ -24,12 +24,29 @@ Bilibili / Twitch 全自动直播录制监控系统，单 Docker 容器部署。
 
 ## 部署
 
+### 方式一：源码构建
+
 ```bash
 git clone https://github.com/Zsf111/live_recorder.git
 cd live_recorder
 echo "DB_PASSWORD=你的密码" > .env
 docker compose up -d
 ```
+
+### 方式二：Docker Hub 镜像
+
+无需 clone 源码，直接拉镜像运行：
+
+```bash
+docker run -d --name live_recorder \
+  -p 8080:5000 \
+  -e DB_PASSWORD=你的密码 \
+  -v /你的路径/数据:/var/lib/postgresql/data \
+  -v /你的路径/下载:/app/downloads \
+  onedosanshi/live_recorder:latest
+```
+
+> 镜像地址：[hub.docker.com/r/onedosanshi/live_recorder](https://hub.docker.com/r/onedosanshi/live_recorder)
 
 ## Web 管理面板
 
