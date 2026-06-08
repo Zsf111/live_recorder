@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import time
 from datetime import datetime
@@ -9,7 +10,7 @@ import psycopg2
 DOWNLOAD_DIR = os.environ.get("DOWNLOAD_DIR", "downloads")
 PROXY = os.environ.get("HTTP_PROXY", "")
 
-# {room_id: {"process": Popen, "log_id": int}}
+# {room_id: {"process": Popen, "log_id": int, "file_path": str}}
 recording_processes = {}
 last_report_time = time.time()
 
@@ -92,6 +93,21 @@ def update_record_log(log_id: int, end_time: datetime, status: str) -> None:
         print(f"[DB] Failed to update record log: {e}")
 
 
+def _update_log_path(log_id: int, new_path: str) -> None:
+    try:
+        connection = _connect()
+        cursor = connection.cursor()
+        cursor.execute(
+            "UPDATE t_record_log SET file_path = %s WHERE id = %s",
+            (new_path, log_id),
+        )
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print(f"[DB] Failed to update log path: {e}")
+
+
 def check_live_status(room_id: str, platform: str) -> bool:
     try:
         if platform.lower() == "bilibili":
@@ -156,7 +172,7 @@ def start_recording(room_id: str, name: str, platform: str) -> None:
         now = datetime.now()
         log_id = insert_record_log(room_id, now, output_path)
 
-        recording_processes[room_id] = {"process": process, "log_id": log_id}
+        recording_processes[room_id] = {"process": process, "log_id": log_id, "file_path": output_path}
         print(f"Recording process started! Streaming to: {output_path}")
 
         update_streamer_status(room_id, "RECORDING")
@@ -167,8 +183,10 @@ def start_recording(room_id: str, name: str, platform: str) -> None:
 
 def clean_finished_processes() -> None:
     """
-    Process reaper: periodically check if background recording processes have finished
+    Process reaper: periodically check if background recording processes have finished.
+    When a recording completes, move the file to completed/ for local pull.
     """
+    completed_dir = os.path.join(DOWNLOAD_DIR, "completed")
     finished_rooms = []
     for room_id, info in recording_processes.items():
         if info["process"].poll() is not None:
@@ -178,7 +196,22 @@ def clean_finished_processes() -> None:
     for room_id in finished_rooms:
         info = recording_processes[room_id]
         now = datetime.now()
-        update_record_log(info["log_id"], now, "SUCCESS")
+        file_path = info["file_path"]
+
+        # Move completed file to completed/ subdirectory
+        os.makedirs(completed_dir, exist_ok=True)
+        filename = os.path.basename(file_path)
+        new_path = os.path.join(completed_dir, filename)
+        try:
+            shutil.move(file_path, new_path)
+            print(f"Moved {filename} to completed/")
+            update_record_log(info["log_id"], now, "SUCCESS")
+            # Update file_path in DB to reflect new location
+            _update_log_path(info["log_id"], new_path)
+        except Exception as e:
+            print(f"Failed to move {filename}: {e}")
+            update_record_log(info["log_id"], now, "SUCCESS")
+
         del recording_processes[room_id]
         update_streamer_status(room_id, "OFFLINE")
 

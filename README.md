@@ -48,6 +48,23 @@ docker exec live_recorder python3 /app/add_streamer.py rm -id 11899478
 | `HTTP_PROXY` | Twitch 代理 | 空（不用） |
 | `DOWNLOAD_DIR` | 录播输出路径 | downloads |
 
+## 本地同步
+
+录制完成后，文件自动移入 `downloads/completed/`。在本地执行 `sync.sh` 拉取：
+
+```bash
+# 1. 编辑 sync.sh，填好 SERVER / USER / 路径
+# 2. 执行拉取（拉完自动删除服务器源文件）
+./sync.sh
+
+# 3. 定时自动拉取（每 30 分钟）
+crontab -e
+# 添加：
+*/30 * * * * /path/to/sync.sh >> /path/to/sync.log 2>&1
+```
+
+> 拉取依赖 SSH 免密登录。先执行 `ssh-copy-id root@你的服务器IP`。
+
 ## 数据库
 
 - `t_streamer_config` — 主播配置（room_id, name, platform, 监控开关, 状态）
