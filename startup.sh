@@ -48,4 +48,8 @@ trap cleanup SIGTERM SIGINT
 # Run monitor in background and wait (keep shell as PID 1 for signal handling)
 echo "[app] Starting live monitor..."
 python3 -u /app/monitor.py &
-wait $!
+
+# Start web panel
+echo "[web] Starting web panel on :5000..."
+python3 -u /app/web.py &
+wait

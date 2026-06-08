@@ -17,7 +17,8 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     -i https://mirrors.aliyun.com/pypi/simple/ \
     -r requirements.txt
 
-COPY add_streamer.py init_db.py monitor.py startup.sh ./
+COPY add_streamer.py init_db.py monitor.py startup.sh web.py ./
+COPY templates/ ./templates/
 RUN chmod +x startup.sh && mkdir -p downloads && chown -R postgres:postgres /app
 
 ENV DB_HOST=localhost \

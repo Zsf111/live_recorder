@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}仪表盘 - Live Recorder{% endblock %}
+{% block content %}
+<h1>仪表盘</h1>
+<div class="flex-row mb">
+  <span class="muted">共 {{ streamers|length }} 位主播</span>
+  <span class="badge badge-recording" style="margin-left:auto;">{{ streamers|selectattr('3', 'equalto', 'RECORDING')|list|length }} 录制中</span>
+  <span class="badge badge-live">{{ streamers|selectattr('3', 'equalto', 'LIVE')|list|length }} 直播中</span>
+  <span class="badge badge-offline">{{ streamers|selectattr('3', 'equalto', 'OFFLINE')|list|length }} 离线</span>
+</div>
+<table>
+  <thead>
+    <tr><th>主播</th><th>房间号</th><th>平台</th><th>状态</th><th>监控</th></tr>
+  </thead>
+  <tbody>
+  {% for s in streamers %}
+    <tr>
+      <td>{{ s[1] }}</td>
+      <td>{{ s[0] }}</td>
+      <td>{{ s[2] }}</td>
+      <td>
+        {% if s[3] == 'RECORDING' %}
+          <span class="badge badge-recording">录制中</span>
+        {% elif s[3] == 'LIVE' %}
+          <span class="badge badge-live">直播中</span>
+        {% else %}
+          <span class="badge badge-offline">离线</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if s[4] %}
+          <span class="badge badge-success">监控中</span>
+        {% else %}
+          <span class="badge badge-offline">已关闭</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if not streamers %}
+  <p class="muted" style="margin-top:20px;">暂无主播，去 <a href="/streamers" style="color:#58a6ff;">主播管理</a> 添加</p>
+{% endif %}
+<!-- Auto-refresh every 30s -->
+<script>setTimeout(function(){ location.reload() }, 30000);</script>
+{% endblock %}

@@ -4,11 +4,13 @@ services:
     container_name: live_recorder
     ports:
       - "${DB_EXPOSE_PORT:-5432}:5432"
+      - "8080:5000"
     environment:
       POSTGRES_DB: live_recorder
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       DB_PASSWORD: ${DB_PASSWORD}
+      WEB_PASSWORD: ${WEB_PASSWORD:-${DB_PASSWORD}}
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
       - ./downloads:/app/downloads

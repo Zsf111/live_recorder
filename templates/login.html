@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}登录 - Live Recorder{% endblock %}
+{% block content %}
+<div style="max-width:360px;margin:80px auto;">
+  <h1 style="text-align:center;">Live Recorder</h1>
+  <div class="card">
+    <form method="post">
+      <div class="mb">
+        <input type="password" name="password" placeholder="请输入访问密码" style="width:100%;padding:10px 14px;" autofocus>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">登 录</button>
+      {% if error %}
+        <p class="flash flash-err" style="margin-top:12px;">{{ error }}</p>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endblock %}
