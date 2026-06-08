@@ -5,7 +5,6 @@
 <div class="flex-row mb">
   <span class="muted">共 {{ streamers|length }} 位主播</span>
   <span class="badge badge-recording" style="margin-left:auto;">{{ streamers|selectattr('3', 'equalto', 'RECORDING')|list|length }} 录制中</span>
-  <span class="badge badge-live">{{ streamers|selectattr('3', 'equalto', 'LIVE')|list|length }} 直播中</span>
   <span class="badge badge-offline">{{ streamers|selectattr('3', 'equalto', 'OFFLINE')|list|length }} 离线</span>
 </div>
 <div class="table-wrap">
@@ -22,8 +21,6 @@
       <td>
         {% if s[3] == 'RECORDING' %}
           <span class="badge badge-recording">录制中</span>
-        {% elif s[3] == 'LIVE' %}
-          <span class="badge badge-live">直播中</span>
         {% else %}
           <span class="badge badge-offline">离线</span>
         {% endif %}
