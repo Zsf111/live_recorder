@@ -9,10 +9,12 @@ import psycopg2
 
 DOWNLOAD_DIR = os.environ.get("DOWNLOAD_DIR", "downloads")
 PROXY = os.environ.get("HTTP_PROXY", "")
+RECORD_RETENTION_DAYS = int(os.environ.get("RECORD_RETENTION_DAYS", "7"))
 
 # {room_id: {"process": Popen, "log_id": int, "file_path": str}}
 recording_processes = {}
 last_report_time = time.time()
+last_cleanup_time = time.time()
 
 
 def _connect():
@@ -216,6 +218,25 @@ def clean_finished_processes() -> None:
         update_streamer_status(room_id, "OFFLINE")
 
 
+def cleanup_old_records() -> None:
+    from datetime import timedelta
+
+    cutoff = datetime.now() - timedelta(days=RECORD_RETENTION_DAYS)
+    conn = _connect()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM t_record_log WHERE end_time IS NOT NULL AND end_time < %s",
+        (cutoff,),
+    )
+    deleted = cur.rowcount
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    if deleted:
+        print(f"[Cleanup] Removed {deleted} old records (retention: {RECORD_RETENTION_DAYS}d)")
+
+
 def report_current_status(streamers: list[tuple[Any, ...]]) -> None:
     """
     Periodic status report every 10 minutes
@@ -235,7 +256,7 @@ def report_current_status(streamers: list[tuple[Any, ...]]) -> None:
 
 
 def start_monitoring_loop() -> None:
-    global last_report_time
+    global last_report_time, last_cleanup_time
     print(
         "[Minimal Log] Multi-Platform Patrol System starting (scan every 60s, report every 10min)..."
     )
@@ -264,7 +285,12 @@ def start_monitoring_loop() -> None:
                 last_report_time = time.time()  # 重置汇报时间
                 print("--------- 守护中 ---------")
 
-            # 5. 遵照嘱托：小憩 60 秒
+            # 5. 每小时清理过期数据库记录
+            if time.time() - last_cleanup_time >= 3600:
+                cleanup_old_records()
+                last_cleanup_time = time.time()
+
+            # 6. 遵照嘱托：小憩 60 秒
             time.sleep(60)
 
         except KeyboardInterrupt:

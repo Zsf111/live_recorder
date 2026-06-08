@@ -71,6 +71,7 @@ docker exec live_recorder python3 /app/add_streamer.py rm -id 11899478
 | `DB_PORT` | 数据库端口 | 5432 |
 | `HTTP_PROXY` | Twitch 代理 | 空（不用） |
 | `DOWNLOAD_DIR` | 录播输出路径 | downloads |
+| `RECORD_RETENTION_DAYS` | 录播记录保留天数 | 7 |
 
 ## 本地同步
 
