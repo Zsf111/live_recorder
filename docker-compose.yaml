@@ -6,6 +6,7 @@ services:
       - "${DB_EXPOSE_PORT:-5432}:5432"
       - "8080:5000"
     environment:
+      TZ: Asia/Shanghai
       POSTGRES_DB: live_recorder
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}

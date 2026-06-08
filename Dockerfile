@@ -21,7 +21,8 @@ COPY add_streamer.py init_db.py monitor.py startup.sh web.py ./
 COPY templates/ ./templates/
 RUN chmod +x startup.sh && mkdir -p downloads && chown -R postgres:postgres /app
 
-ENV DB_HOST=localhost \
+ENV TZ=Asia/Shanghai \
+    DB_HOST=localhost \
     DB_PORT=5432 \
     DB_NAME=live_recorder \
     DB_USER=postgres \
