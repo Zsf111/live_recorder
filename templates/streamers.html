@@ -15,6 +15,7 @@
   </form>
 </div>
 
+<div class="table-wrap">
 <table>
   <thead>
     <tr><th>房间号</th><th>名称</th><th>平台</th><th>状态</th><th>监控</th><th>操作</th></tr>
@@ -26,7 +27,7 @@
       <td>
         <form method="post" action="/api/streamers/edit" class="flex-row" style="display:inline-flex;">
           <input type="hidden" name="room_id" value="{{ s[0] }}">
-          <input type="text" name="name" value="{{ s[1] }}" style="width:120px;">
+          <input type="text" name="name" value="{{ s[1] }}" style="width:100px;">
           <button type="submit" class="btn btn-sm">改</button>
         </form>
       </td>
@@ -45,22 +46,23 @@
           <input type="hidden" name="room_id" value="{{ s[0] }}">
           <input type="hidden" name="monitor" value="{{ '0' if s[3] else '1' }}">
           {% if s[3] %}
-            <button class="btn btn-sm" title="点击关闭监控">监控中 ✓</button>
+            <button class="btn btn-sm" title="关闭监控">✓</button>
           {% else %}
-            <button class="btn btn-sm" style="color:#8b949e;" title="点击开启监控">已关闭 ✗</button>
+            <button class="btn btn-sm" style="color:#8b949e;" title="开启监控">✗</button>
           {% endif %}
         </form>
       </td>
       <td>
         <form method="post" action="/api/streamers/delete" style="display:inline;" onsubmit="return confirm('确认删除 {{ s[1] }}？')">
           <input type="hidden" name="room_id" value="{{ s[0] }}">
-          <button class="btn btn-sm btn-danger">删除</button>
+          <button class="btn btn-sm btn-danger">删</button>
         </form>
       </td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% if not streamers %}
   <p class="muted" style="margin-top:20px;">还没有添加主播，用上面的表单添加一个。</p>
 {% endif %}

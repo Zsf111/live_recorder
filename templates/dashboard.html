@@ -8,6 +8,7 @@
   <span class="badge badge-live">{{ streamers|selectattr('3', 'equalto', 'LIVE')|list|length }} 直播中</span>
   <span class="badge badge-offline">{{ streamers|selectattr('3', 'equalto', 'OFFLINE')|list|length }} 离线</span>
 </div>
+<div class="table-wrap">
 <table>
   <thead>
     <tr><th>主播</th><th>房间号</th><th>平台</th><th>状态</th><th>监控</th></tr>
@@ -38,6 +39,7 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% if not streamers %}
   <p class="muted" style="margin-top:20px;">暂无主播，去 <a href="/streamers" style="color:#58a6ff;">主播管理</a> 添加</p>
 {% endif %}

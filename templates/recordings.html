@@ -3,6 +3,7 @@
 {% block content %}
 <h1>录播历史</h1>
 <p class="muted mb">最近 100 条记录</p>
+<div class="table-wrap">
 <table>
   <thead>
     <tr><th>时间</th><th>主播</th><th>文件</th><th>时长</th><th>状态</th><th>下载</th></tr>
@@ -12,7 +13,7 @@
     <tr>
       <td>{{ r.start_time.strftime('%m-%d %H:%M') if r.start_time else '-' }}</td>
       <td>{{ r.room_id }}</td>
-      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ r.filename }}">{{ r.filename or '-' }}</td>
+      <td class="ellipsis" title="{{ r.filename }}">{{ r.filename or '-' }}</td>
       <td>
         {% if r.start_time and r.end_time %}
           {% set sec = (r.end_time - r.start_time).total_seconds() | int %}
@@ -37,6 +38,7 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% if not recordings %}
   <p class="muted" style="margin-top:20px;">暂无录播记录。</p>
 {% endif %}

@@ -7,38 +7,55 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f1117; color: #e1e4e8; min-height: 100vh; }
-  nav { background: #161b22; border-bottom: 1px solid #30363d; padding: 0 24px; display: flex; align-items: center; gap: 24px; height: 48px; }
-  nav a { color: #8b949e; text-decoration: none; font-size: 14px; }
+  nav { background: #161b22; border-bottom: 1px solid #30363d; padding: 0 12px; display: flex; align-items: center; gap: 14px; height: 48px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+  nav a { color: #8b949e; text-decoration: none; font-size: 13px; flex-shrink: 0; }
   nav a:hover, nav a.active { color: #f0f6fc; }
-  nav .brand { font-weight: 600; color: #f0f6fc; margin-right: auto; font-size: 15px; }
+  nav .brand { font-weight: 600; color: #f0f6fc; margin-right: auto; font-size: 14px; flex-shrink: 0; }
   nav .logout { color: #f85149; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #21262d; font-size: 14px; }
-  th { color: #8b949e; font-weight: 500; font-size: 13px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 16px; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px; padding: 0 16px; }
+  table { width: 100%; border-collapse: collapse; min-width: 500px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #21262d; font-size: 13px; }
+  th { color: #8b949e; font-weight: 500; font-size: 12px; white-space: nowrap; }
   tr:hover { background: #161b22; }
-  .badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 500; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; white-space: nowrap; }
   .badge-recording { background: #da3633; color: #fff; }
   .badge-live { background: #1f6feb; color: #fff; }
   .badge-offline { background: #30363d; color: #8b949e; }
   .badge-success { background: #238636; color: #fff; }
-  .btn { display: inline-block; padding: 6px 14px; border: 1px solid #30363d; border-radius: 6px; background: #21262d; color: #c9d1d9; cursor: pointer; font-size: 13px; text-decoration: none; }
+  .btn { display: inline-block; padding: 6px 12px; border: 1px solid #30363d; border-radius: 6px; background: #21262d; color: #c9d1d9; cursor: pointer; font-size: 13px; text-decoration: none; white-space: nowrap; }
   .btn:hover { background: #30363d; }
   .btn-danger { color: #f85149; border-color: #f85149; background: transparent; }
   .btn-danger:hover { background: #f85149; color: #fff; }
   .btn-primary { background: #238636; border-color: #238636; color: #fff; }
   .btn-primary:hover { background: #2ea043; }
-  .btn-sm { padding: 3px 10px; font-size: 12px; }
-  input, select { padding: 6px 10px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #c9d1d9; font-size: 13px; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  input, select { padding: 6px 8px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #c9d1d9; font-size: 13px; }
   input:focus, select:focus { outline: none; border-color: #1f6feb; }
   .flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 14px; }
   .muted { color: #8b949e; font-size: 13px; }
-  .mb { margin-bottom: 16px; }
+  .mb { margin-bottom: 14px; }
   .flash { padding: 8px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
   .flash-ok { background: #238636; color: #fff; }
   .flash-err { background: #da3633; color: #fff; }
+  .ellipsis { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  @media (min-width: 481px) {
+    nav { padding: 0 24px; gap: 24px; }
+    nav a { font-size: 14px; }
+    nav .brand { font-size: 15px; }
+    .container { padding: 24px; }
+    h1 { font-size: 22px; margin-bottom: 20px; }
+    th, td { padding: 10px 14px; font-size: 14px; }
+    th { font-size: 13px; }
+    .badge { padding: 2px 10px; font-size: 12px; }
+    .btn-sm { padding: 3px 10px; font-size: 12px; }
+    .card { padding: 20px; margin-bottom: 16px; }
+    input, select { padding: 6px 10px; }
+    .table-wrap { margin: 0; padding: 0; }
+  }
 </style>
 </head>
 <body>
