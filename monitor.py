@@ -137,7 +137,7 @@ def start_recording(room_id: str, name: str, platform: str) -> None:
     if platform.lower() == "bilibili":
         url = f"https://live.bilibili.com/{room_id}"
         # Use the tested traditional HTTP live stream filter command
-        cmd = ["yt-dlp", "-f", "best[protocol^=http]", "-o", output_path, url]
+        cmd = ["yt-dlp", "--retries", "infinite", "--retry-sleep", "30", "-f", "best[protocol^=http]", "-o", output_path, url]
 
     elif platform.lower() == "twitch":
         url = f"https://www.twitch.tv/{room_id}"
