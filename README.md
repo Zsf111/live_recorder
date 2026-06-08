@@ -9,11 +9,14 @@ Bilibili / Twitch 全自动直播录制监控系统，单 Docker 容器部署。
 │  startup.sh                         │
 │  ├─ pg_ctl start (PostgreSQL 16)   │
 │  ├─ 等待就绪 → init_db.py 建表    │
-│  └─ monitor.py (60s 轮询扫描)      │
-│       ├─ yt-dlp → B 站直播流拉取   │
-│       └─ streamlink → Twitch 拉取   │
+│  ├─ monitor.py & (60s 轮询扫描)    │
+│  │    ├─ yt-dlp → B 站直播流拉取   │
+│  │    └─ streamlink → Twitch 拉取   │
+│  └─ web.py &     (Flask :5000)     │
+│       └─ Web 管理面板               │
 │                                     │
 │  ← 5432 (PostgreSQL)               │
+│  ← 8080 (Web 面板)                 │
 │  ← ./postgres_data (数据持久化)    │
 │  ← ./downloads (录播文件)          │
 └─────────────────────────────────────┘
@@ -28,7 +31,11 @@ echo "DB_PASSWORD=你的密码" > .env
 docker compose up -d
 ```
 
-## 管理主播
+## Web 管理面板
+
+部署后访问 `http://公网IP:8080`，登录密码为 `DB_PASSWORD`。可在浏览器中完成仪表盘查看、主播管理、录播下载等操作。
+
+## CLI 管理主播
 
 ```bash
 docker exec live_recorder python3 /app/add_streamer.py add -id 11899478 -n OLDnannan -p bilibili
