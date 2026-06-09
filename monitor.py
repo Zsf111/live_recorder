@@ -200,6 +200,20 @@ def clean_finished_processes() -> None:
         now = datetime.now()
         file_path = info["file_path"]
 
+        # Remux to standard MP4 so QuickTime / default players can open it
+        fixed_path = file_path + ".tmp.mp4"
+        result = subprocess.run(
+            ["ffmpeg", "-i", file_path, "-c", "copy", "-movflags", "+faststart", "-y", fixed_path],
+            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True,
+        )
+        if result.returncode == 0:
+            os.replace(fixed_path, file_path)
+            print(f"Remuxed {os.path.basename(file_path)} to standard MP4")
+        else:
+            # Keep original file if remux fails; clean up temp if it exists
+            if os.path.exists(fixed_path):
+                os.remove(fixed_path)
+
         # Move completed file to completed/ subdirectory
         os.makedirs(completed_dir, exist_ok=True)
         filename = os.path.basename(file_path)
@@ -208,7 +222,6 @@ def clean_finished_processes() -> None:
             shutil.move(file_path, new_path)
             print(f"Moved {filename} to completed/")
             update_record_log(info["log_id"], now, "SUCCESS")
-            # Update file_path in DB to reflect new location
             _update_log_path(info["log_id"], new_path)
         except Exception as e:
             print(f"Failed to move {filename}: {e}")
