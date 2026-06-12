@@ -1,0 +1,26 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH to server and update
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/live_recorder
+            git pull
+            docker cp monitor.py live_recorder:/app/monitor.py
+            docker cp web.py live_recorder:/app/web.py
+            docker cp add_streamer.py live_recorder:/app/add_streamer.py
+            docker cp init_db.py live_recorder:/app/init_db.py
+            docker cp startup.sh live_recorder:/app/startup.sh
+            docker cp templates/. live_recorder:/app/templates/
+            docker compose restart
