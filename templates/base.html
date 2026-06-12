@@ -61,7 +61,7 @@
 <body>
 {% if session.logged_in %}
 <nav>
-  <span class="brand">Live Recorder</span>
+  <span class="brand">Live Recorder</span><span style="color:#8b949e;font-size:11px;margin-left:4px;">v1</span>
   <a href="/" class="{{ 'active' if request.path == '/' }}">仪表盘</a>
   <a href="/streamers" class="{{ 'active' if request.path == '/streamers' }}">主播管理</a>
   <a href="/recordings" class="{{ 'active' if request.path == '/recordings' }}">录播历史</a>
