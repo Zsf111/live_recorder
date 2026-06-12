@@ -23,4 +23,5 @@ jobs:
             docker cp init_db.py live_recorder:/app/init_db.py
             docker cp startup.sh live_recorder:/app/startup.sh
             docker cp templates/. live_recorder:/app/templates/
+            docker exec live_recorder chmod +x /app/startup.sh
             docker compose restart
