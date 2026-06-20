@@ -6,7 +6,7 @@
 <div class="table-wrap">
 <table>
   <thead>
-    <tr><th>时间</th><th>主播</th><th>文件</th><th>时长</th><th>状态</th><th>下载</th></tr>
+    <tr><th>时间</th><th>主播</th><th>文件</th><th>时长</th><th>状态</th><th>音频</th><th>下载</th><th>操作</th></tr>
   </thead>
   <tbody>
   {% for r in recordings %}
@@ -30,9 +30,29 @@
         {% endif %}
       </td>
       <td>
-        {% if r.completed %}
-          <a href="/download/completed/{{ r.filename }}" class="btn btn-sm btn-primary">下载</a>
+        {% if r.has_audio %}
+          <span class="badge badge-success">已转</span>
+        {% else %}
+          <span class="badge badge-offline">-</span>
         {% endif %}
+      </td>
+      <td>
+        {% if r.completed %}
+          <a href="/download/completed/{{ r.filename }}" class="btn btn-sm">视频</a>
+        {% endif %}
+        {% if r.has_audio %}
+          <a href="/download/completed/{{ r.audio_filename }}" class="btn btn-sm">音频</a>
+        {% endif %}
+      </td>
+      <td>
+        {% if r.completed and not r.has_audio %}
+          <form method="POST" action="/api/recordings/convert/{{ r.id }}" style="display:inline" onsubmit="return confirm('提取音频？')">
+            <button class="btn btn-sm" type="submit">转音频</button>
+          </form>
+        {% endif %}
+        <form method="POST" action="/api/recordings/delete/{{ r.id }}" style="display:inline" onsubmit="return confirm('确认删除这条记录及文件？')">
+          <button class="btn btn-sm btn-danger" type="submit">删除</button>
+        </form>
       </td>
     </tr>
   {% endfor %}

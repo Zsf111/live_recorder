@@ -1,4 +1,5 @@
 import os
+import subprocess
 from datetime import datetime
 from functools import wraps
 
@@ -142,7 +143,7 @@ def recordings_page():
     conn = _connect()
     cur = conn.cursor()
     cur.execute(
-        "SELECT id, room_id, start_time, end_time, file_path, status FROM t_record_log ORDER BY start_time DESC LIMIT 100"
+        "SELECT id, room_id, start_time, end_time, file_path, audio_path, status FROM t_record_log ORDER BY start_time DESC LIMIT 100"
     )
     rows = cur.fetchall()
     cur.close()
@@ -150,10 +151,11 @@ def recordings_page():
 
     recordings = []
     for row in rows:
-        r = dict(zip(["id", "room_id", "start_time", "end_time", "file_path", "status"], row))
-        # Extract filename for display and relative path for download
+        r = dict(zip(["id", "room_id", "start_time", "end_time", "file_path", "audio_path", "status"], row))
         r["filename"] = os.path.basename(r["file_path"] or "")
+        r["audio_filename"] = os.path.basename(r["audio_path"] or "")
         r["completed"] = r["status"] == "SUCCESS" and r["file_path"] and os.path.exists(r["file_path"])
+        r["has_audio"] = bool(r["audio_path"] and os.path.exists(r["audio_path"]))
         recordings.append(r)
 
     return render_template("recordings.html", recordings=recordings)
@@ -172,6 +174,74 @@ def download_file(subpath):
     if not os.path.isfile(file_path):
         abort(404)
     return send_file(file_path, as_attachment=True)
+
+
+@app.route("/api/recordings/delete/<int:rec_id>", methods=["POST"])
+@login_required
+def api_delete_recording(rec_id):
+    conn = _connect()
+    cur = conn.cursor()
+    cur.execute("SELECT file_path, audio_path FROM t_record_log WHERE id = %s", (rec_id,))
+    row = cur.fetchone()
+    if not row:
+        cur.close()
+        conn.close()
+        return "记录不存在", 404
+
+    file_path, audio_path = row
+    # Delete video file
+    if file_path and os.path.isfile(file_path):
+        os.remove(file_path)
+    # Delete audio file if exists
+    if audio_path and os.path.isfile(audio_path):
+        os.remove(audio_path)
+
+    cur.execute("DELETE FROM t_record_log WHERE id = %s", (rec_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for("recordings_page"))
+
+
+@app.route("/api/recordings/convert/<int:rec_id>", methods=["POST"])
+@login_required
+def api_convert_recording(rec_id):
+    conn = _connect()
+    cur = conn.cursor()
+    cur.execute("SELECT file_path FROM t_record_log WHERE id = %s", (rec_id,))
+    row = cur.fetchone()
+    if not row:
+        cur.close()
+        conn.close()
+        return "记录不存在", 404
+
+    file_path = row[0]
+    if not file_path or not os.path.isfile(file_path):
+        cur.close()
+        conn.close()
+        return "源文件不存在", 404
+
+    # Generate audio path: change .mp4/.flv/.mkv to .m4a
+    audio_path = os.path.splitext(file_path)[0] + ".m4a"
+
+    # Extract audio without re-encoding
+    result = subprocess.run(
+        ["ffmpeg", "-y", "-i", file_path, "-vn", "-acodec", "copy", audio_path],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        cur.close()
+        conn.close()
+        return f"转换失败: {result.stderr[-500:]}", 500
+
+    cur.execute(
+        "UPDATE t_record_log SET audio_path = %s WHERE id = %s",
+        (audio_path, rec_id),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for("recordings_page"))
 
 
 if __name__ == "__main__":

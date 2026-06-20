@@ -22,4 +22,5 @@ jobs:
             docker cp add_streamer.py live_recorder:/app/add_streamer.py
             docker cp init_db.py live_recorder:/app/init_db.py
             docker cp templates/. live_recorder:/app/templates/
+            docker exec live_recorder python3 /app/init_db.py
             docker compose restart

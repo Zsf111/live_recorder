@@ -47,10 +47,17 @@ def init_database() -> None:
             start_time TIMESTAMP NOT NULL,
             end_time TIMESTAMP,
             file_path TEXT,
+            audio_path TEXT,
             status VARCHAR(20) DEFAULT 'RECORDING'
         );
         """
         cursor.execute(create_log_table_query)
+
+        # Migration: add audio_path column if upgrading from older schema
+        cursor.execute("""
+            ALTER TABLE t_record_log
+            ADD COLUMN IF NOT EXISTS audio_path TEXT
+        """)
 
         # 6. 核心：提交事务（不 commit 的话，建表操作在内存里闪一下就没了，不会落盘）
         connection.commit()
