@@ -16,6 +16,7 @@ downloads/
 
 # Context (local only)
 CONTEXT.md
+sync.sh
 
 # macOS
 .DS_Store
