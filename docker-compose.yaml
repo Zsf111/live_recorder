@@ -16,3 +16,8 @@ services:
       - ./postgres_data:/var/lib/postgresql/data
       - ./downloads:/app/downloads
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
