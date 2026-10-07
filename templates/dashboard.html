@@ -2,10 +2,12 @@
 {% block title %}仪表盘 - Live Recorder{% endblock %}
 {% block content %}
 <h1>仪表盘</h1>
-<div class="flex-row mb">
-  <span class="muted">共 {{ streamers|length }} 位主播</span>
-  <span class="badge badge-recording" style="margin-left:auto;">{{ streamers|selectattr('3', 'equalto', 'RECORDING')|list|length }} 录制中</span>
-  <span class="badge badge-offline">{{ streamers|selectattr('3', 'equalto', 'OFFLINE')|list|length }} 离线</span>
+<div class="stat-grid">
+  <div class="stat-card"><div class="stat-value">{{ total_hours }}</div><div class="stat-label">累计录制时长</div></div>
+  <div class="stat-card"><div class="stat-value">{{ total_recordings }}</div><div class="stat-label">累计录制场次</div></div>
+  <div class="stat-card"><div class="stat-value">{{ recent_hours }}</div><div class="stat-label">近 7 天时长</div></div>
+  <div class="stat-card"><div class="stat-value"{% if recording_count %} style="color:#f85149;"{% endif %}>{{ recording_count }}</div><div class="stat-label">正在录制</div></div>
+  <div class="stat-card"><div class="stat-value">{{ streamers|length }}</div><div class="stat-label">监控主播</div></div>
 </div>
 <div class="table-wrap">
 <table>

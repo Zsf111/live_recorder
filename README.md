@@ -50,7 +50,7 @@ docker run -d --name live_recorder \
 
 ## Web 管理面板
 
-部署后访问 `http://公网IP:8080`，登录密码为 `DB_PASSWORD`。可在浏览器中完成仪表盘查看、主播管理、录播下载等操作。
+部署后访问 `http://公网IP:8080`，登录密码为 `DB_PASSWORD`。可在浏览器中完成仪表盘查看、主播管理、录播下载等操作。未登录访客可在登录页查看累计录制时长、场次等聚合统计；主播名单与录播文件需登录后查看。
 
 ## CLI 管理主播
 
@@ -94,3 +94,4 @@ crontab -e
 
 - `t_streamer_config` — 主播配置（room_id, name, platform, 监控开关, 状态）
 - `t_record_log` — 录制日志（起止时间, 文件路径, 状态）
+- `t_record_stats` — 累计统计（单行：总时长/总场次，不随日志清理删除）

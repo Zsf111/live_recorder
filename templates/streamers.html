@@ -18,7 +18,7 @@
 <div class="table-wrap">
 <table>
   <thead>
-    <tr><th>房间号</th><th>名称</th><th>平台</th><th>状态</th><th>监控</th><th>操作</th></tr>
+    <tr><th>房间号</th><th>名称</th><th>平台</th><th>状态</th><th>监控</th><th>近7天</th><th>操作</th></tr>
   </thead>
   <tbody>
   {% for s in streamers %}
@@ -50,6 +50,7 @@
           {% endif %}
         </form>
       </td>
+      <td class="muted">{{ recent_stats.get(s[0], '-') }}</td>
       <td>
         <form method="post" action="/api/streamers/delete" style="display:inline;" onsubmit="return confirm('确认删除 {{ s[1] }}？')">
           <input type="hidden" name="room_id" value="{{ s[0] }}">

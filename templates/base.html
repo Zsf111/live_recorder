@@ -35,6 +35,10 @@
   input:focus, select:focus { outline: none; border-color: #1f6feb; }
   .flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 14px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 14px; }
+  .stat-value { font-size: 22px; font-weight: 600; color: #f0f6fc; }
+  .stat-label { font-size: 12px; color: #8b949e; margin-top: 2px; }
   .muted { color: #8b949e; font-size: 13px; }
   .mb { margin-bottom: 14px; }
   .flash { padding: 8px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
@@ -53,6 +57,8 @@
     .badge { padding: 2px 10px; font-size: 12px; }
     .btn-sm { padding: 3px 10px; font-size: 12px; }
     .card { padding: 20px; margin-bottom: 16px; }
+    .stat-card { padding: 14px 18px; }
+    .stat-value { font-size: 26px; }
     input, select { padding: 6px 10px; }
     .table-wrap { margin: 0; padding: 0; }
   }

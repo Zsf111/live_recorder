@@ -1,8 +1,14 @@
 {% extends "base.html" %}
 {% block title %}登录 - Live Recorder{% endblock %}
 {% block content %}
-<div style="max-width:360px;margin:80px auto;">
+<div style="max-width:420px;margin:48px auto;">
   <h1 style="text-align:center;">Live Recorder</h1>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-value">{{ stats.total_hours }}</div><div class="stat-label">累计录制时长</div></div>
+    <div class="stat-card"><div class="stat-value">{{ stats.total_recordings }}</div><div class="stat-label">累计录制场次</div></div>
+    <div class="stat-card"><div class="stat-value">{{ stats.recent_hours }}</div><div class="stat-label">近 7 天时长</div></div>
+    <div class="stat-card"><div class="stat-value">{{ stats.streamer_count }}</div><div class="stat-label">监控主播</div></div>
+  </div>
   <div class="card">
     <form method="post">
       <div class="mb">
@@ -14,5 +20,6 @@
       {% endif %}
     </form>
   </div>
+  <p class="muted" style="text-align:center;">主播名单与录播文件仅登录后可见</p>
 </div>
 {% endblock %}

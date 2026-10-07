@@ -17,6 +17,15 @@ WEB_PASSWORD = _web_pw
 DOWNLOAD_DIR = os.environ.get("DOWNLOAD_DIR", "downloads")
 
 
+def _fmt_duration(seconds: float) -> str:
+    seconds = int(seconds)
+    if seconds < 60:
+        return f"{seconds} 秒"
+    if seconds < 3600:
+        return f"{seconds // 60} 分钟"
+    return f"{seconds / 3600:.1f} 小时"
+
+
 def _connect():
     return psycopg2.connect(
         host=os.environ.get("DB_HOST", "localhost"),
@@ -45,7 +54,31 @@ def login():
             session["logged_in"] = True
             return redirect(url_for("dashboard"))
         error = "密码错误"
-    return render_template("login.html", error=error)
+    # 公开聚合统计：访客可见总时长等汇总数据，主播名单仍需登录
+    stats = {"total_hours": "0 小时", "total_recordings": 0, "recent_hours": "0 小时", "streamer_count": 0}
+    try:
+        conn = _connect()
+        cur = conn.cursor()
+        cur.execute("SELECT total_seconds, total_recordings FROM t_record_stats WHERE id = 1")
+        total_seconds, total_recordings = cur.fetchone() or (0, 0)
+        cur.execute(
+            "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (end_time - start_time))), 0) FROM t_record_log WHERE status = 'SUCCESS' AND end_time IS NOT NULL"
+        )
+        recent_seconds = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM t_streamer_config")
+        streamer_count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        stats = {
+            "total_hours": _fmt_duration(total_seconds),
+            "total_recordings": total_recordings,
+            "recent_hours": _fmt_duration(recent_seconds),
+            "streamer_count": streamer_count,
+        }
+    except Exception:
+        # 统计是装饰性的：DB 异常（如未跑 init_db 建表）不能挡住登录入口
+        pass
+    return render_template("login.html", error=error, stats=stats)
 
 
 @app.route("/logout")
@@ -61,9 +94,24 @@ def dashboard():
     cur = conn.cursor()
     cur.execute("SELECT room_id, streamer_name, platform, current_status, is_monitored FROM t_streamer_config ORDER BY platform, streamer_name")
     streamers = cur.fetchall()
+    # 累计统计：单行累加表，不随 7 天日志清理而丢失
+    cur.execute("SELECT total_seconds, total_recordings FROM t_record_stats WHERE id = 1")
+    total_seconds, total_recordings = cur.fetchone() or (0, 0)
+    # 近 7 天时长：直接汇总仍保留在 t_record_log 里的记录
+    cur.execute(
+        "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (end_time - start_time))), 0) FROM t_record_log WHERE status = 'SUCCESS' AND end_time IS NOT NULL"
+    )
+    recent_seconds = cur.fetchone()[0]
     cur.close()
     conn.close()
-    return render_template("dashboard.html", streamers=streamers)
+    return render_template(
+        "dashboard.html",
+        streamers=streamers,
+        total_hours=_fmt_duration(total_seconds),
+        total_recordings=total_recordings,
+        recent_hours=_fmt_duration(recent_seconds),
+        recording_count=sum(1 for s in streamers if s[3] == "RECORDING"),
+    )
 
 
 @app.route("/streamers", methods=["GET"])
@@ -73,9 +121,19 @@ def streamers_page():
     cur = conn.cursor()
     cur.execute("SELECT room_id, streamer_name, platform, is_monitored, current_status FROM t_streamer_config ORDER BY platform, streamer_name")
     streamers = cur.fetchall()
+    # 每位主播近 7 天录制时长/场次（来自 t_record_log 现存记录）
+    cur.execute(
+        """
+        SELECT room_id, COALESCE(SUM(EXTRACT(EPOCH FROM (end_time - start_time))), 0), COUNT(*)
+        FROM t_record_log
+        WHERE status = 'SUCCESS' AND end_time IS NOT NULL
+        GROUP BY room_id
+        """
+    )
+    recent_stats = {r[0]: f"{_fmt_duration(r[1])} · {r[2]} 场" for r in cur.fetchall()}
     cur.close()
     conn.close()
-    return render_template("streamers.html", streamers=streamers)
+    return render_template("streamers.html", streamers=streamers, recent_stats=recent_stats)
 
 
 @app.route("/api/streamers/add", methods=["POST"])
@@ -150,15 +208,21 @@ def recordings_page():
     conn.close()
 
     recordings = []
+    listed_seconds = 0
+    listed_count = 0
     for row in rows:
         r = dict(zip(["id", "room_id", "start_time", "end_time", "file_path", "audio_path", "status"], row))
         r["filename"] = os.path.basename(r["file_path"] or "")
         r["audio_filename"] = os.path.basename(r["audio_path"] or "")
         r["completed"] = r["status"] == "SUCCESS" and r["file_path"] and os.path.exists(r["file_path"])
         r["has_audio"] = bool(r["audio_path"] and os.path.exists(r["audio_path"]))
+        if r["status"] == "SUCCESS" and r["start_time"] and r["end_time"]:
+            listed_seconds += (r["end_time"] - r["start_time"]).total_seconds()
+            listed_count += 1
         recordings.append(r)
 
-    return render_template("recordings.html", recordings=recordings)
+    summary = f"已完成 {listed_count} 场 · 合计 {_fmt_duration(listed_seconds)}"
+    return render_template("recordings.html", recordings=recordings, summary=summary)
 
 
 @app.route("/download/<path:subpath>")

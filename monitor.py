@@ -110,6 +110,25 @@ def _update_log_path(log_id: int, new_path: str) -> None:
         print(f"[DB] Failed to update log path: {e}")
 
 
+def accumulate_stats(duration_seconds: float) -> None:
+    """
+    Cumulative stats: add a finished recording to the single-row t_record_stats table.
+    Keeps total hours/count after old t_record_log rows get cleaned up.
+    """
+    try:
+        connection = _connect()
+        cursor = connection.cursor()
+        cursor.execute(
+            "UPDATE t_record_stats SET total_seconds = total_seconds + %s, total_recordings = total_recordings + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
+            (int(duration_seconds),),
+        )
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print(f"[DB] Failed to accumulate stats: {e}")
+
+
 def check_live_status(room_id: str, platform: str) -> bool:
     try:
         if platform.lower() == "bilibili":
@@ -174,7 +193,7 @@ def start_recording(room_id: str, name: str, platform: str) -> None:
         now = datetime.now()
         log_id = insert_record_log(room_id, now, output_path)
 
-        recording_processes[room_id] = {"process": process, "log_id": log_id, "file_path": output_path}
+        recording_processes[room_id] = {"process": process, "log_id": log_id, "file_path": output_path, "start_time": now}
         print(f"Recording process started! Streaming to: {output_path}")
 
         update_streamer_status(room_id, "RECORDING")
@@ -199,6 +218,10 @@ def clean_finished_processes() -> None:
         info = recording_processes[room_id]
         now = datetime.now()
         file_path = info["file_path"]
+
+        # 累计统计：无论 remux/移动是否成功，这场都录过了，时长入账
+        duration = max(0.0, (now - info["start_time"]).total_seconds())
+        accumulate_stats(duration)
 
         # Remux to standard MP4 so QuickTime / default players can open it
         fixed_path = file_path + ".tmp.mp4"
