@@ -13,6 +13,8 @@ downloads/
 
 # Claude
 .claude/
+.agents/
+skills-lock.json
 
 # Context (local only)
 CONTEXT.md
