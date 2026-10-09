@@ -1,25 +1,133 @@
 {% extends "base.html" %}
-{% block title %}登录 - Live Recorder{% endblock %}
+{% block title %}Live Recorder - 自动直播录制{% endblock %}
+{% block body_class %}landing-page{% endblock %}
 {% block content %}
-<div style="max-width:420px;margin:48px auto;">
-  <h1 style="text-align:center;">Live Recorder</h1>
-  <div class="stat-grid">
-    <div class="stat-card"><div class="stat-value">{{ stats.total_hours }}</div><div class="stat-label">累计录制时长</div></div>
-    <div class="stat-card"><div class="stat-value">{{ stats.total_recordings }}</div><div class="stat-label">累计录制场次</div></div>
-    <div class="stat-card"><div class="stat-value">{{ stats.recent_hours }}</div><div class="stat-label">近 7 天时长</div></div>
-    <div class="stat-card"><div class="stat-value">{{ stats.streamer_count }}</div><div class="stat-label">监控主播</div></div>
-  </div>
-  <div class="card">
-    <form method="post">
-      <div class="mb">
-        <input type="password" name="password" placeholder="请输入访问密码" style="width:100%;padding:10px 14px;" autofocus>
+<style>
+  .landing-page .container { max-width: 1240px; }
+  .landing-nav { height: 72px; display: flex; align-items: center; justify-content: space-between; }
+  .landing-brand { color: var(--text); font-size: 16px; font-weight: 750; letter-spacing: -.03em; text-decoration: none; }
+  .hero { min-height: calc(100dvh - 96px); display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr); align-items: center; gap: clamp(40px, 7vw, 96px); padding: 42px 0 68px; }
+  .hero-copy h1 { max-width: 700px; margin: 0 0 22px; font-size: clamp(52px, 7vw, 92px); line-height: .94; letter-spacing: -.072em; }
+  .hero-copy > p { max-width: 500px; color: var(--muted); font-size: clamp(17px, 2vw, 21px); line-height: 1.55; }
+  .hero-actions { display: flex; gap: 10px; margin-top: 30px; }
+  .hero-actions .btn { min-height: 46px; padding-inline: 18px; }
+  .product-frame { position: relative; min-height: 530px; padding: 18px; overflow: hidden; border: 1px solid #33403a; border-radius: 16px; background: radial-gradient(circle at 78% 12%, rgba(121,212,156,.22), transparent 30%), linear-gradient(145deg, #17231c, #101419 60%); box-shadow: 0 40px 100px rgba(0,0,0,.35); }
+  .product-frame::after { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px); background-size: 32px 32px; mask-image: linear-gradient(#000, transparent 82%); pointer-events: none; }
+  .frame-bar, .frame-body { position: relative; z-index: 1; }
+  .frame-bar { display: flex; justify-content: space-between; color: #a8b4ad; font-size: 12px; }
+  .frame-body { min-height: 466px; display: flex; flex-direction: column; justify-content: flex-end; }
+  .frame-body h2 { max-width: 430px; margin: 14px 0 28px; font-size: clamp(36px, 5vw, 58px); line-height: 1; letter-spacing: -.06em; }
+  .frame-signal { display: flex; align-items: end; height: 110px; gap: 7px; padding: 18px; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; background: rgba(10,13,16,.66); }
+  .frame-signal span { flex: 1; height: var(--h); border-radius: 4px; background: linear-gradient(to top, #477f59, #9be1b2); }
+  .metric-band { display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); margin: 0 0 120px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .metric-intro, .metric { min-height: 138px; display: flex; flex-direction: column; justify-content: center; padding: 22px; }
+  .metric { border-left: 1px solid var(--line); }
+  .metric strong { font-size: clamp(24px, 3vw, 38px); letter-spacing: -.045em; }
+  .metric span, .metric-intro p { margin-top: 6px; color: var(--muted); font-size: 12px; }
+  .feature-section { padding-bottom: 120px; }
+  .feature-section h2, .access-section h2 { max-width: 780px; margin-bottom: 36px; font-size: clamp(38px, 5vw, 64px); line-height: 1; letter-spacing: -.06em; }
+  .feature-grid { display: grid; grid-template-columns: 1.25fr .75fr; grid-template-rows: repeat(2, 220px); gap: 12px; }
+  .feature { display: flex; flex-direction: column; justify-content: space-between; padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .feature:first-child { grid-row: 1 / 3; background: radial-gradient(circle at 20% 10%, rgba(121,212,156,.12), transparent 32%), var(--surface); }
+  .feature h3 { max-width: 420px; font-size: clamp(25px, 3vw, 38px); letter-spacing: -.045em; }
+  .feature p { max-width: 460px; color: var(--muted); line-height: 1.55; }
+  .access-section { display: grid; grid-template-columns: 1fr 420px; align-items: start; gap: clamp(50px, 9vw, 120px); padding: 110px 0 90px; border-top: 1px solid var(--line); }
+  .access-copy p { max-width: 520px; color: var(--muted); font-size: 17px; line-height: 1.6; }
+  .login-card { padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .login-card h3 { margin-bottom: 6px; font-size: 22px; }
+  .login-card > p { margin-bottom: 22px; color: var(--muted); font-size: 13px; }
+  .field-label { display: block; margin-bottom: 8px; color: #c5cdd6; font-size: 13px; }
+  .login-card input { width: 100%; min-height: 48px; padding: 11px 13px; font-size: 16px; }
+  .login-card .btn { width: 100%; min-height: 48px; }
+  .landing-footer { display: flex; justify-content: space-between; gap: 20px; padding: 24px 0 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-copy, .product-frame { animation: hero-in .7s cubic-bezier(.16,1,.3,1) both; }
+    .product-frame { animation-delay: .09s; }
+    .frame-signal span { animation: signal 1.7s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -120ms); }
+    @keyframes hero-in { from { opacity: 0; transform: translateY(22px); } }
+  }
+  @media (max-width: 760px) {
+    .landing-nav { height: 62px; }
+    .hero { min-height: auto; grid-template-columns: 1fr; gap: 38px; padding: 48px 0 70px; }
+    .hero-copy h1 { font-size: clamp(48px, 15vw, 66px); }
+    .hero-actions { align-items: stretch; flex-direction: column; }
+    .product-frame { min-height: 430px; }
+    .frame-body { min-height: 370px; }
+    .metric-band { grid-template-columns: repeat(2, 1fr); margin-bottom: 84px; }
+    .metric-intro { grid-column: 1 / -1; min-height: 100px; padding-inline: 0; }
+    .metric { min-height: 112px; border-top: 1px solid var(--line); }
+    .metric:nth-child(even) { border-left: 0; }
+    .feature-section { padding-bottom: 84px; }
+    .feature-grid { grid-template-columns: 1fr; grid-template-rows: none; }
+    .feature, .feature:first-child { grid-row: auto; min-height: 220px; }
+    .access-section { grid-template-columns: 1fr; gap: 36px; padding-block: 82px 70px; }
+    .landing-footer { flex-direction: column; }
+  }
+</style>
+
+<header class="landing-nav">
+  <a class="landing-brand" href="/login">Live Recorder</a>
+  <a class="btn" href="#access">管理员登录</a>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>直播开始，录制自动继续。</h1>
+      <p>持续监控 Bilibili 与 Twitch，在直播开始时自动保存完整内容。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#access">进入管理台</a>
+        <a class="btn" href="#features">了解工作方式</a>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">登 录</button>
-      {% if error %}
-        <p class="flash flash-err" style="margin-top:12px;">{{ error }}</p>
-      {% endif %}
-    </form>
-  </div>
-  <p class="muted" style="text-align:center;">主播名单与录播文件仅登录后可见</p>
-</div>
+    </div>
+    <div class="product-frame" aria-label="录制状态界面预览">
+      <div class="frame-bar"><span class="live-indicator">自动监控</span><span>准备就绪</span></div>
+      <div class="frame-body">
+        <p class="page-kicker">直播出现时，系统立即响应</p>
+        <h2>把注意力留给内容，而不是录制按钮。</h2>
+        <div class="frame-signal" aria-hidden="true">
+          <span style="--h:36%;--i:1"></span><span style="--h:70%;--i:2"></span><span style="--h:48%;--i:3"></span><span style="--h:88%;--i:4"></span><span style="--h:56%;--i:5"></span><span style="--h:78%;--i:6"></span><span style="--h:42%;--i:7"></span><span style="--h:92%;--i:8"></span><span style="--h:61%;--i:9"></span><span style="--h:74%;--i:10"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="metric-band" aria-label="录制统计">
+    <div class="metric-intro"><strong>正在运行的记录</strong><p>公开页面仅显示聚合数据</p></div>
+    <div class="metric"><strong>{{ stats.total_hours }}</strong><span>累计录制时长</span></div>
+    <div class="metric"><strong>{{ stats.total_recordings }}</strong><span>累计录制场次</span></div>
+    <div class="metric"><strong>{{ stats.recent_hours }}</strong><span>近 7 天时长</span></div>
+    <div class="metric"><strong>{{ stats.streamer_count }}</strong><span>监控主播</span></div>
+  </section>
+
+  <section class="feature-section" id="features">
+    <h2>从发现直播到保存文件，全程自动完成。</h2>
+    <div class="feature-grid">
+      <article class="feature"><h3>持续检查直播状态</h3><p>系统定时检查已添加的主播。直播开始后自动建立录制任务，无需守在网页前。</p></article>
+      <article class="feature"><h3>同时支持两个平台</h3><p>Bilibili 与 Twitch 使用同一套管理流程。</p></article>
+      <article class="feature"><h3>文件保留在自己的设备</h3><p>录制、音频提取和下载都由你的服务器处理。</p></article>
+    </div>
+  </section>
+
+  <section class="access-section" id="access">
+    <div class="access-copy">
+      <h2>管理内容保持私密。</h2>
+      <p>主播名单、录制历史和下载入口仅在验证密码后显示。访客只能看到汇总统计。</p>
+    </div>
+    <div class="login-card">
+      <h3>管理员登录</h3>
+      <p>使用部署时设置的访问密码。</p>
+      <form method="post">
+        <div class="mb">
+          <label class="field-label" for="password">访问密码</label>
+          <input id="password" type="password" name="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">登录</button>
+        {% if error %}<p class="flash flash-err" style="margin-top:12px;">{{ error }}</p>{% endif %}
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="landing-footer"><span>Live Recorder</span><span>自托管直播录制与管理</span></footer>
 {% endblock %}

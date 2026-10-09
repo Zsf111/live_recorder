@@ -48,6 +48,8 @@ def login_required(f):
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "GET" and session.get("logged_in"):
+        return redirect(url_for("dashboard"))
     error = None
     if request.method == "POST":
         if request.form.get("password") == WEB_PASSWORD:

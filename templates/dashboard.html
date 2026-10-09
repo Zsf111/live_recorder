@@ -1,7 +1,41 @@
 {% extends "base.html" %}
 {% block title %}仪表盘 - Live Recorder{% endblock %}
 {% block content %}
-<h1>仪表盘</h1>
+<div class="page-heading">
+  <div><h1>仪表盘</h1><p class="page-kicker">直播状态与录制概览</p></div>
+  <span class="page-kicker">每 30 秒自动更新</span>
+</div>
+{% if recording_count %}
+<section class="live-stage" aria-label="正在录制">
+  <div class="live-stage-top">
+    <span class="live-indicator">正在录制</span>
+    <span class="page-kicker">{{ recording_count }} 个直播间</span>
+  </div>
+  <div class="live-stage-content">
+    <div class="live-copy">
+      <p>直播内容正在安全写入本地</p>
+      <h2>不错过正在发生的每一刻。</h2>
+    </div>
+    <div class="signal-panel" aria-label="实时录制信号">
+      <div class="signal-title"><span>实时信号</span><span>REC</span></div>
+      <div class="waveform" aria-hidden="true">
+        <span style="--h:42%;--i:1"></span><span style="--h:76%;--i:2"></span><span style="--h:55%;--i:3"></span><span style="--h:91%;--i:4"></span><span style="--h:64%;--i:5"></span><span style="--h:82%;--i:6"></span><span style="--h:48%;--i:7"></span><span style="--h:72%;--i:8"></span><span style="--h:96%;--i:9"></span><span style="--h:58%;--i:10"></span><span style="--h:79%;--i:11"></span><span style="--h:46%;--i:12"></span>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="recording-grid">
+  {% for s in streamers if s[3] == 'RECORDING' %}
+  <article class="recording-card">
+    <span class="live-indicator">录制中</span>
+    <div>
+      <h3>{{ s[1] }}</h3>
+      <div class="recording-meta"><span>{{ s[2] }}</span><span>房间 {{ s[0] }}</span></div>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
 <div class="stat-grid">
   <div class="stat-card"><div class="stat-value">{{ total_hours }}</div><div class="stat-label">累计录制时长</div></div>
   <div class="stat-card"><div class="stat-value">{{ total_recordings }}</div><div class="stat-label">累计录制场次</div></div>
@@ -17,17 +51,17 @@
   <tbody>
   {% for s in streamers %}
     <tr>
-      <td>{{ s[1] }}</td>
-      <td>{{ s[0] }}</td>
-      <td>{{ s[2] }}</td>
-      <td>
+      <td data-label="主播">{{ s[1] }}</td>
+      <td data-label="房间号">{{ s[0] }}</td>
+      <td data-label="平台">{{ s[2] }}</td>
+      <td data-label="状态">
         {% if s[3] == 'RECORDING' %}
           <span class="badge badge-recording">录制中</span>
         {% else %}
           <span class="badge badge-offline">离线</span>
         {% endif %}
       </td>
-      <td>
+      <td data-label="监控">
         {% if s[4] %}
           <span class="badge badge-success">监控中</span>
         {% else %}

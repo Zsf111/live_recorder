@@ -11,16 +11,16 @@
   <tbody>
   {% for r in recordings %}
     <tr>
-      <td>{{ r.start_time.strftime('%m-%d %H:%M') if r.start_time else '-' }}</td>
-      <td>{{ r.room_id }}</td>
-      <td class="ellipsis" title="{{ r.filename }}">{{ r.filename or '-' }}</td>
-      <td>
+      <td data-label="时间">{{ r.start_time.strftime('%m-%d %H:%M') if r.start_time else '-' }}</td>
+      <td data-label="主播">{{ r.room_id }}</td>
+      <td data-label="文件" class="ellipsis" title="{{ r.filename }}">{{ r.filename or '-' }}</td>
+      <td data-label="时长">
         {% if r.start_time and r.end_time %}
           {% set sec = (r.end_time - r.start_time).total_seconds() | int %}
           {{ '%d分%d秒' % (sec // 60, sec % 60) }}
         {% else %}-{% endif %}
       </td>
-      <td>
+      <td data-label="状态">
         {% if r.status == 'SUCCESS' %}
           <span class="badge badge-success">完成</span>
         {% elif r.status == 'RECORDING' %}
@@ -29,14 +29,14 @@
           <span class="badge badge-offline">{{ r.status }}</span>
         {% endif %}
       </td>
-      <td>
+      <td data-label="音频">
         {% if r.has_audio %}
           <span class="badge badge-success">已转</span>
         {% else %}
           <span class="badge badge-offline">-</span>
         {% endif %}
       </td>
-      <td>
+      <td data-label="下载">
         {% if r.completed %}
           <a href="/download/completed/{{ r.filename }}" class="btn btn-sm">视频</a>
         {% endif %}
@@ -44,7 +44,7 @@
           <a href="/download/completed/{{ r.audio_filename }}" class="btn btn-sm">音频</a>
         {% endif %}
       </td>
-      <td>
+      <td data-label="操作">
         {% if r.completed and not r.has_audio %}
           <form method="POST" action="/api/recordings/convert/{{ r.id }}" style="display:inline" onsubmit="return confirm('提取音频？')">
             <button class="btn btn-sm" type="submit">转音频</button>

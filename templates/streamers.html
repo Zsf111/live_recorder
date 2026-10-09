@@ -23,23 +23,23 @@
   <tbody>
   {% for s in streamers %}
     <tr>
-      <td>{{ s[0] }}</td>
-      <td>
+      <td data-label="房间号">{{ s[0] }}</td>
+      <td data-label="名称">
         <form method="post" action="/api/streamers/edit" class="flex-row" style="display:inline-flex;">
           <input type="hidden" name="room_id" value="{{ s[0] }}">
           <input type="text" name="name" value="{{ s[1] }}" style="width:100px;">
           <button type="submit" class="btn btn-sm">改</button>
         </form>
       </td>
-      <td>{{ s[2] }}</td>
-      <td>
+      <td data-label="平台">{{ s[2] }}</td>
+      <td data-label="状态">
         {% if s[4] == 'RECORDING' %}
           <span class="badge badge-recording">录制中</span>
         {% else %}
           <span class="badge badge-offline">离线</span>
         {% endif %}
       </td>
-      <td>
+      <td data-label="监控">
         <form method="post" action="/api/streamers/edit" style="display:inline;">
           <input type="hidden" name="room_id" value="{{ s[0] }}">
           <input type="hidden" name="monitor" value="{{ '0' if s[3] else '1' }}">
@@ -50,8 +50,8 @@
           {% endif %}
         </form>
       </td>
-      <td class="muted">{{ recent_stats.get(s[0], '-') }}</td>
-      <td>
+      <td data-label="近 7 天" class="muted">{{ recent_stats.get(s[0], '-') }}</td>
+      <td data-label="操作">
         <form method="post" action="/api/streamers/delete" style="display:inline;" onsubmit="return confirm('确认删除 {{ s[1] }}？')">
           <input type="hidden" name="room_id" value="{{ s[0] }}">
           <button class="btn btn-sm btn-danger">删</button>
