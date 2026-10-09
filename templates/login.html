@@ -9,7 +9,7 @@
   .hero { min-height: calc(100dvh - 96px); display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr); align-items: center; gap: clamp(40px, 7vw, 96px); padding: 42px 0 68px; }
   .hero-copy h1 { max-width: 700px; margin: 0 0 22px; font-size: clamp(52px, 7vw, 92px); line-height: .94; letter-spacing: -.072em; }
   .hero-copy > p { max-width: 500px; color: var(--muted); font-size: clamp(17px, 2vw, 21px); line-height: 1.55; }
-  .hero-actions { display: flex; gap: 10px; margin-top: 30px; }
+  .hero-actions { display: flex; margin-top: 30px; }
   .hero-actions .btn { min-height: 46px; padding-inline: 18px; }
   .product-frame { position: relative; min-height: 530px; padding: 18px; overflow: hidden; border: 1px solid #33403a; border-radius: 16px; background: radial-gradient(circle at 78% 12%, rgba(121,212,156,.22), transparent 30%), linear-gradient(145deg, #17231c, #101419 60%); box-shadow: 0 40px 100px rgba(0,0,0,.35); }
   .product-frame::after { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px); background-size: 32px 32px; mask-image: linear-gradient(#000, transparent 82%); pointer-events: none; }
@@ -67,7 +67,7 @@
 
 <header class="landing-nav">
   <a class="landing-brand" href="/login">Live Recorder</a>
-  <a class="btn" href="#access">管理员登录</a>
+  <a class="btn" href="#access" data-login-focus>输入密码登录</a>
 </header>
 
 <main>
@@ -76,8 +76,7 @@
       <h1>直播开始，录制自动继续。</h1>
       <p>持续监控 Bilibili 与 Twitch，在直播开始时自动保存完整内容。</p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="#access">进入管理台</a>
-        <a class="btn" href="#features">了解工作方式</a>
+        <a class="btn btn-primary" href="#access" data-login-focus>输入密码登录</a>
       </div>
     </div>
     <div class="product-frame" aria-label="录制状态界面预览">
@@ -130,4 +129,19 @@
 </main>
 
 <footer class="landing-footer"><span>Live Recorder</span><span>自托管直播录制与管理</span></footer>
+<script>
+  (function () {
+    var password = document.getElementById('password');
+    var access = document.getElementById('access');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll('[data-login-focus]').forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        password.focus({ preventScroll: true });
+        access.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+        history.replaceState(null, '', '#access');
+      });
+    });
+  })();
+</script>
 {% endblock %}
