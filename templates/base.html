@@ -59,13 +59,13 @@
   .flash { padding: 8px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
   .flash-ok { background: var(--badge-ok-bg); color: var(--badge-ok-text); }
   .flash-err { background: var(--error-bg); color: var(--badge-recording-text); }
-  .theme-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 5px 0; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }
+  .theme-toggle { display: inline-flex; align-items: center; padding: 8px 2px; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
   .theme-toggle:hover { color: var(--text); }
   .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .theme-switch-track { position: relative; width: 34px; height: 20px; flex: 0 0 auto; border: 1px solid var(--input-line); border-radius: 10px; background: var(--surface-2); transition: background .18s ease, border-color .18s ease; }
   .theme-switch-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); transition: transform .18s ease, background .18s ease; }
-  .theme-toggle[aria-checked="true"] .theme-switch-track { border-color: var(--accent); background: var(--accent); }
-  .theme-toggle[aria-checked="true"] .theme-switch-thumb { background: var(--primary-text); transform: translateX(14px); }
+  :root[data-theme="dark"] .theme-switch-track { border-color: var(--accent); background: var(--accent); }
+  :root[data-theme="dark"] .theme-switch-thumb { background: var(--primary-text); transform: translateX(14px); }
   .ellipsis { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mobile-label { display: none; }
   .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
@@ -100,7 +100,6 @@
     nav .version { display: none; }
     nav a { min-width: 0; padding: 7px 2px; border-radius: 6px; text-align: center; font-size: 12px; line-height: 1.2; }
     nav .theme-toggle { justify-self: center; }
-    nav .theme-toggle-label { display: none; }
     nav a.active { background: var(--surface-2); }
     nav .logout { color: var(--danger); }
     .container { padding-top: 20px; }
@@ -160,13 +159,12 @@
 {% if session.logged_in %}
 <nav>
   <span class="brand">Live Recorder</span>
+  <button type="button" class="theme-toggle" data-theme-toggle role="switch" aria-checked="false" aria-label="开启深色模式">
+    <span class="theme-switch-track" aria-hidden="true"><span class="theme-switch-thumb"></span></span>
+  </button>
   <a href="/" class="{{ 'active' if request.path == '/' }}">仪表盘</a>
   <a href="/streamers" class="{{ 'active' if request.path == '/streamers' }}">主播管理</a>
   <a href="/recordings" class="{{ 'active' if request.path == '/recordings' }}">录播历史</a>
-  <button type="button" class="theme-toggle" data-theme-toggle role="switch" aria-checked="false" aria-label="开启深色模式">
-    <span class="theme-toggle-label">深色模式</span>
-    <span class="theme-switch-track" aria-hidden="true"><span class="theme-switch-thumb"></span></span>
-  </button>
   <a href="/logout" class="logout">退出</a>
 </nav>
 {% endif %}
