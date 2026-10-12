@@ -40,7 +40,7 @@
   <div class="stat-card"><div class="stat-value">{{ total_hours }}</div><div class="stat-label">累计录制时长</div></div>
   <div class="stat-card"><div class="stat-value">{{ total_recordings }}</div><div class="stat-label">累计录制场次</div></div>
   <div class="stat-card"><div class="stat-value">{{ recent_hours }}</div><div class="stat-label">近 7 天时长</div></div>
-  <div class="stat-card"><div class="stat-value"{% if recording_count %} style="color:#f85149;"{% endif %}>{{ recording_count }}</div><div class="stat-label">正在录制</div></div>
+  <div class="stat-card"><div class="stat-value"{% if recording_count %} style="color:var(--recording);"{% endif %}>{{ recording_count }}</div><div class="stat-label">正在录制</div></div>
   <div class="stat-card"><div class="stat-value">{{ streamers|length }}</div><div class="stat-label">监控主播</div></div>
 </div>
 <div class="table-wrap">
@@ -74,7 +74,7 @@
 </table>
 </div>
 {% if not streamers %}
-  <p class="muted" style="margin-top:20px;">暂无主播，去 <a href="/streamers" style="color:#58a6ff;">主播管理</a> 添加</p>
+  <p class="muted" style="margin-top:20px;">暂无主播，去 <a href="/streamers" style="color:var(--accent);">主播管理</a> 添加</p>
 {% endif %}
 <!-- Auto-refresh every 30s -->
 <script>setTimeout(function(){ location.reload() }, 30000);</script>
