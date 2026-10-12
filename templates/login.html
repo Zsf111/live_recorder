@@ -6,7 +6,8 @@
   .landing-page .container { max-width: 1120px; }
   .landing-nav { height: 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
   .landing-brand { color: var(--text); font-size: 15px; font-weight: 700; letter-spacing: -.025em; text-decoration: none; }
-  .landing-nav span { color: var(--muted); font-size: 12px; }
+  .landing-nav-meta { display: flex; align-items: center; gap: 12px; }
+  .landing-nav-meta span { color: var(--muted); font-size: 12px; }
   .hero { min-height: calc(100dvh - 120px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 420px); align-items: center; gap: clamp(52px, 9vw, 120px); padding: 64px 0 80px; }
   .hero-copy h1 { max-width: 650px; margin: 0 0 22px; font-size: clamp(50px, 7vw, 82px); line-height: .98; letter-spacing: -.065em; }
   .hero-copy > p { max-width: 520px; color: var(--muted); font-size: 18px; line-height: 1.6; }
@@ -17,7 +18,7 @@
   .hero-fact strong { display: block; font-size: 22px; letter-spacing: -.035em; }
   .hero-fact span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
   .access-card { padding: 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
-  .hairline-figure { width: min(100%, 250px); min-height: 200px; margin: 0 auto 12px; --hairline-plate: #ffffff; --hairline-hi: #232327; --hairline-edge: #a4a4ac; --hairline-mid: #c3c3c9; --hairline-lo: #e0e0e4; --hairline-stroke: .9; }
+  .hairline-figure { width: min(100%, 250px); min-height: 200px; margin: 0 auto 12px; --hairline-plate: var(--surface); --hairline-hi: var(--text); --hairline-edge: var(--muted); --hairline-mid: var(--line); --hairline-lo: var(--surface-2); --hairline-stroke: .9; }
   .figure-fallback { height: 200px; display: grid; place-items: center; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--line); }
   .access-card h2 { margin: 8px 0 6px; font-size: 24px; letter-spacing: -.035em; }
   .access-card > p { margin-bottom: 22px; color: var(--muted); font-size: 13px; line-height: 1.5; }
@@ -46,7 +47,13 @@
 
 <header class="landing-nav">
   <a class="landing-brand" href="/login">Live Recorder</a>
-  <span>自托管直播录制</span>
+  <div class="landing-nav-meta">
+    <span>自托管直播录制</span>
+    <button type="button" class="theme-toggle" data-theme-toggle role="switch" aria-checked="false" aria-label="开启深色模式">
+      <span class="theme-toggle-label">深色模式</span>
+      <span class="theme-switch-track" aria-hidden="true"><span class="theme-switch-thumb"></span></span>
+    </button>
+  </div>
 </header>
 
 <main>
@@ -92,11 +99,17 @@
 <script type="module">
   import { terminal } from "https://esm.sh/@lucasmarkes/hairline@0.5.0";
   var target = document.getElementById('hairline-figure');
-  target.replaceChildren();
-  terminal(target, {
-    intensity: 0.35,
-    theme: 'light',
-    label: '一个显示录制服务历史的细线终端图形'
+  function renderFigure(theme) {
+    target.replaceChildren();
+    terminal(target, {
+      intensity: 0.35,
+      theme: theme,
+      label: '一个显示录制服务历史的细线终端图形'
+    });
+  }
+  renderFigure(document.documentElement.dataset.theme || 'light');
+  document.addEventListener('themechange', function (event) {
+    renderFigure(event.detail.theme);
   });
 </script>
 {% endblock %}
